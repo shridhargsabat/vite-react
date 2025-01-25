@@ -1,35 +1,88 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+interface Transaction {
+  id: number;
+  amount: number;
+  description: string;
+  category: string;
 }
 
-export default App
+const categories = ['Food', 'Transport', 'Housing', 'Entertainment', 'Savings', 'Other'];
+
+const App: React.FC = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState(categories[0]);
+
+  const addTransaction = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (amount && description) {
+      setTransactions(prevTransactions => [
+        ...prevTransactions,
+        {
+          id: Date.now(),
+          amount: parseFloat(amount),
+          description: description,
+          category: category
+        }
+      ]);
+      setDescription('');
+      setAmount('');
+      setCategory(categories[0]);
+    }
+  };
+
+  const removeTransaction = (id: number) => {
+    setTransactions(transactions.filter(transaction => transaction.id !== id));
+  };
+
+  const calculateBalance = () => {
+    return transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  };
+
+  return (
+    <div className="App">
+      <h1>Budget Tracker</h1>
+      <form onSubmit={addTransaction}>
+        <input 
+          type="text" 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          placeholder="Description" 
+          required 
+        />
+        <input 
+          type="number" 
+          value={amount} 
+          onChange={(e) => setAmount(e.target.value)} 
+          placeholder="Amount" 
+          step="0.01" 
+          required 
+        />
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+        <button type="submit">Add Transaction</button>
+      </form>
+      <div className="balance">
+        <h2>Current Balance: ${calculateBalance().toFixed(2)}</h2>
+      </div>
+      <ul className="transactions">
+        {transactions.map(transaction => (
+          <li key={transaction.id} className="transaction">
+            <span>{transaction.description}</span> 
+            <span>${transaction.amount.toFixed(2)}</span>
+            <span>({transaction.category})</span>
+            <button onClick={() => removeTransaction(transaction.id)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;
